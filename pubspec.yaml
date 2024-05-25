@@ -1,0 +1,32 @@
+name: symtower
+description: "SymTower game"
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flame: ^1.13.1
+  forge2d: ^0.13.0
+  flame_forge2d: ^0.18.0
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/blocks/marvel/
+    - assets/images/blocks/rock/
+    - assets/images/blocks/stone/
+    - assets/images/blocks/sand/
+    - assets/images/crane/
+    - assets/images/
