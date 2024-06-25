@@ -4,6 +4,7 @@ import 'package:flame/extensions.dart';
 import 'package:flame/game.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flutter/widgets.dart';
+import 'package:symtower/npc/crowd.dart';
 
 import 'tetromino/block.dart';
 
@@ -22,46 +23,40 @@ class SymTower extends Forge2DGame with TapCallbacks {
     final visibleRect = camera.visibleWorldRect;
     visibleRect.bottomCenter;
 
-    world.add(SpriteComponent(
+   /* world.add(SpriteComponent(
       sprite: await Sprite.load('crane/crane_pilar.png'),
       anchor: Anchor.center,
-      scale: Vector2.all(.1),
-    ));
+      position: Vector2(0, -50),
+      scale: Vector2.all(.09),
+    ));*/
     world.addAll([
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2(), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(3.2, 0)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(6.2, 0)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(9.2, 0)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(12.2, 0)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(15.2, 0)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-3.2, 0)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-6.2, 0)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-9.2, 0)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-12.2, 0)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-15.2, 0)), isFoundation: true),
+      TetrominoBlock(/*initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(0, -1)),*/ isFoundation: true),
+      /* TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(3.2, -1)), isFoundation: true),
+      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(6.2, -1)), isFoundation: true),
+      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(9.2, -1)), isFoundation: true),
+      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(12.2, -1)), isFoundation: true),
+      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(15.2, -1)), isFoundation: true),
+      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-3.2, -1)), isFoundation: true),
+      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-6.2, -1)), isFoundation: true),
+      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-9.2, -1)), isFoundation: true),
+      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-12.2, -1)), isFoundation: true),
+      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-15.2, -1)), isFoundation: true),*/
     ]);
   }
 
   @override
   void onTapDown(event) {
-    var block = TetrominoBlock(blockSprite: randomBlockSprite(), initialPosition: Vector2(0, 0));
-    var block2 = TetrominoBlock(blockSprite: randomBlockSprite(), initialPosition: Vector2(3.2, 0));
-
-    world.addAll([block2, block]);
+    final bottomLeft = camera.visibleWorldRect.bottomLeft.toVector2()..add(Vector2(-crowdSize, -crowdSize));
+    var crowd1 = Crowd();
+    world.addAll([crowd1]);
   }
 
   List<Component> createBoundaries() {
     final visibleRect = camera.visibleWorldRect;
-    final topLeft = visibleRect.topLeft.toVector2();
-    final topRight = visibleRect.topRight.toVector2();
-    final bottomRight = visibleRect.bottomRight.toVector2();
-    final bottomLeft = visibleRect.bottomLeft.toVector2();
+    final bottomRight = visibleRect.bottomRight.toVector2()..add(Vector2(100, 0));
+    final bottomLeft = visibleRect.bottomLeft.toVector2()..add(Vector2(-100, 0));
 
-    return [
-      Wall(topRight, bottomRight),
-      Wall(bottomLeft, bottomRight),
-      Wall(topLeft, bottomLeft),
-    ];
+    return [Wall(bottomLeft, bottomRight)];
   }
 }
 
@@ -74,7 +69,7 @@ class Wall extends BodyComponent {
   @override
   Body createBody() {
     final shape = EdgeShape()..set(_start, _end);
-    final fixtureDef = FixtureDef(shape, friction: 0.3);
+    final fixtureDef = FixtureDef(shape, friction: 1);
     final bodyDef = BodyDef(position: Vector2.zero());
     return world.createBody(bodyDef)..createFixture(fixtureDef);
   }

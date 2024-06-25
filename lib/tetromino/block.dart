@@ -7,39 +7,14 @@ enum Material { marvel, rock, stone }
 
 enum TileStyle { tile_0000, tile_0001, tile_0002, tile_0003, tile_0006, tile_0011, tile_0013, tile_0016, tile_0021 }
 
-(Material, TileStyle) randomBlockSprite() {
-  return (Material.values.random(), TileStyle.values.random());
+({Material material, TileStyle style}) randomBlockSprite() {
+  return (material: Material.values.random(), style: TileStyle.values.random());
 }
 
-const double size = 3;
-final fixture = FixtureDef(
-  PolygonShape()
-    ..set([
-      Vector2(-(size / 2), (size / 2)),
-      Vector2((size / 2), -(size / 2)),
-      Vector2(-(size / 2), -(size / 2)),
-      Vector2((size / 2), (size / 2)),
-    ]),
-  restitution: 0,
-  density: 10,
-  friction: 1,
-);
-
-final fixtureFoundation = FixtureDef(
-  PolygonShape()
-    ..set([
-      Vector2(-(size / 2), (size / 2)),
-      Vector2((size / 2), -(size / 2)),
-      Vector2(-(size / 2), -(size / 2)),
-      Vector2((size / 2), (size / 2)),
-    ]),
-  restitution: 0,
-  density: 1000000,
-  friction: 1,
-);
+const double size = 2;
 
 class TetrominoBlock extends BodyComponent with TapCallbacks {
-  final (Material, TileStyle)? blockSprite;
+  final ({Material material, TileStyle style})? blockSprite;
   final bool isFoundation;
 
   final Vector2? initialPosition;
@@ -50,24 +25,73 @@ class TetrominoBlock extends BodyComponent with TapCallbacks {
 
   @override
   Future<void> onLoad() async {
-    fixtureDefs = [isFoundation ? fixtureFoundation : fixture];
     bodyDef = BodyDef(
       angularDamping: 0.8,
       position: initialPosition ?? Vector2.zero(),
-      type: BodyType.dynamic,
+      type: isFoundation ? BodyType.static : BodyType.dynamic,
     );
-    add(SpriteComponent(
+
+    fixtureDefs = _fixtureDef();
+
+    add(
+      SpriteComponent(
         sprite: await Sprite.load(
-            isFoundation ? 'blocks/sand/tile_0025.png' : 'blocks/${blockSprite!.$1.name}/${blockSprite!.$2.name}.png'),
+          isFoundation ? 'blocks/sand/tile_0025.png' : 'blocks/${blockSprite!.material.name}/${blockSprite!.style.name}.png',
+        ),
         anchor: Anchor.center,
-        size: Vector2.all(size)));
+        size: Vector2.all(size),
+      ),
+    );
+
     super.onLoad();
   }
 
+  List<FixtureDef> _fixtureDef() {
+    if (isFoundation) {
+      return [
+        FixtureDef(
+          PolygonShape()
+            ..set([
+              Vector2(-(size / 2), (size / 2)),
+              Vector2((size / 2), -(size / 2)),
+              Vector2(-(size / 2), -(size / 2)),
+              Vector2((size / 2), (size / 2)),
+            ]),
+        )
+      ];
+    }
+    return [
+      FixtureDef(
+        PolygonShape()
+          ..set([
+            Vector2(-(size / 2), (size / 2)),
+            Vector2((size / 2), -(size / 2)),
+            Vector2(-(size / 2), -(size / 2)),
+            Vector2((size / 2), (size / 2)),
+          ]),
+        restitution: switch (blockSprite!.material) {
+          Material.marvel => 0.6,
+          Material.rock => 0.8,
+          Material.stone => 0.3,
+        },
+        density: switch (blockSprite!.material) {
+          Material.marvel => 500,
+          Material.rock => 300,
+          Material.stone => 1000,
+        },
+        friction: switch (blockSprite!.material) {
+          Material.marvel => 0.2,
+          Material.rock => 0.5,
+          Material.stone => 0.7,
+        },
+      )
+    ];
+  }
+
   @override
-  void onTapDown(_) {
+  void onTapDown(TapDownEvent event) {
     applyWind(25);
-    affectFriction(0);
+    //affectFriction(0);
   }
 
   void multiplyGravity(double multiplier) {
