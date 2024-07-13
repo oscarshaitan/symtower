@@ -3,52 +3,61 @@ import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/game.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
+import 'package:flame_tiled/flame_tiled.dart';
 import 'package:flutter/widgets.dart';
-import 'package:symtower/npc/crowd.dart';
 
-import 'tetromino/block.dart';
+import 'npc/crowd.dart';
 
 void main() {
-  runApp(const GameWidget.controlled(gameFactory: SymTower.new));
+  runApp(
+    const Center(
+      child: ClipRect(
+        child: SizedBox(
+          width: 60 * 18,
+          height: 78 * 18,
+          child: GameWidget.controlled(gameFactory: SymTower.new),
+        ),
+      ),
+    ),
+  );
 }
 
 class SymTower extends Forge2DGame with TapCallbacks {
+  int _life = 10;
+
   @override
   Future<void> onLoad() async {
+    camera = CameraComponent.withFixedResolution(width: size.x, height: size.y);
+    camera.viewport.add(FpsTextComponent());
     await super.onLoad();
 
-    camera.viewport.add(FpsTextComponent());
+    TiledComponent homeMap = await TiledComponent.load('symtower_map_60_32.tmx', Vector2(18, 18));
+    add(homeMap);
 
-    world.addAll(createBoundaries());
-    final visibleRect = camera.visibleWorldRect;
-    visibleRect.bottomCenter;
-
-   /* world.add(SpriteComponent(
-      sprite: await Sprite.load('crane/crane_pilar.png'),
-      anchor: Anchor.center,
-      position: Vector2(0, -50),
-      scale: Vector2.all(.09),
-    ));*/
-    world.addAll([
-      TetrominoBlock(/*initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(0, -1)),*/ isFoundation: true),
-      /* TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(3.2, -1)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(6.2, -1)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(9.2, -1)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(12.2, -1)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(15.2, -1)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-3.2, -1)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-6.2, -1)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-9.2, -1)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-12.2, -1)), isFoundation: true),
-      TetrominoBlock(initialPosition: visibleRect.bottomCenter.toVector2()..add(Vector2(-15.2, -1)), isFoundation: true),*/
-    ]);
+    //addAll(createBoundaries());
+    _generateCrowd();
   }
 
   @override
-  void onTapDown(event) {
-    final bottomLeft = camera.visibleWorldRect.bottomLeft.toVector2()..add(Vector2(-crowdSize, -crowdSize));
-    var crowd1 = Crowd();
-    world.addAll([crowd1]);
+  Future<void> onTapDown(event) async {
+    print(event.localPosition);
+    addAll([
+      Crowd(), /*TetrominoBlock(blockSprite: randomBlockSprite(), isFoundation: false)*/
+    ]);
+  }
+
+  _generateCrowd() async {
+    while (true) {
+      //  addAll(([Crowd()]);
+      await Future.delayed(const Duration(seconds: 1));
+    }
+  }
+
+  onCrowdKilled() {
+    _life--;
+    if (_life <= 0 && !paused) {
+      pauseEngine();
+    }
   }
 
   List<Component> createBoundaries() {

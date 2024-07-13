@@ -1,46 +1,79 @@
-import 'package:flame/components.dart';
-import 'package:flame/extensions.dart';
-import 'package:flame/flame.dart';
-import 'package:flame/sprite.dart';
+import 'dart:math';
+
+import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:symtower/main.dart';
+import 'package:symtower/npc/crowd_sprite.dart';
+import 'package:symtower/tetromino/block/export.dart';
 
-enum CrowdState { walkingLeft, walkingRight, hit }
-
-const double crowdSize = 8;
-
-class Crowd extends SpriteAnimationGroupComponent<CrowdState> with HasGameReference<SymTower> {
-  Crowd() : super(size: Vector2.all(crowdSize), current: CrowdState.walkingRight);
+class Crowd extends BodyComponent with ContactCallbacks {
+  Crowd() : super(renderBody: false);
+  late final CrowdSprite _crowdSprite;
+  bool _gotHit = false;
 
   @override
   Future<void> onLoad() async {
-    _setUpSpawn();
-    _setUpHitBoxes();
-    await _setUpAnimations();
+    bool leftSpawn = Random().nextBool();
+    bodyDef = BodyDef(
+        userData: this,
+        position: _getSpawn(leftSpawn),
+        type: BodyType.kinematic,
+        linearVelocity: Vector2(_getVelocity(leftSpawn), 0));
+    fixtureDefs = [
+      FixtureDef(
+        isSensor: true,
+        PolygonShape()
+          ..set([
+            Vector2(crowdSize / 4, 0),
+            Vector2(crowdSize / 4, crowdSize),
+            Vector2(crowdSize * 3 / 4, crowdSize),
+            Vector2(crowdSize * 3 / 4, 0),
+          ]),
+      )
+    ];
+
+    _crowdSprite = CrowdSprite(leftSpawn);
+    add(_crowdSprite);
+    super.onLoad();
   }
 
-  Future<void> _setUpAnimations() async {
-    final SpriteSheet spriteSheet = SpriteSheet(image: await Flame.images.load('crowd/james.png'), srcSize: Vector2.all(32.0));
+  double _getVelocity(bool leftSpawn) => leftSpawn ? crowdSize : -crowdSize;
 
-    final walkingAnimationRight = spriteSheet.createAnimation(row: 0, stepTime: 0.2, from: 6, to: 12);
-    final walkingAnimationLeft = spriteSheet.createAnimation(row: 0, stepTime: 0.2, from: 18, to: 24);
-    final hitAnimation = spriteSheet.createAnimation(row: 0, stepTime: 0.2, from: 0, to: 1);
-    debugMode = true;
-    animations = {
-      CrowdState.walkingRight: walkingAnimationRight,
-      CrowdState.walkingLeft: walkingAnimationLeft,
-      CrowdState.hit: hitAnimation,
-    };
+  Vector2 _getSpawn(bool leftSpawn) {
+    if (leftSpawn) {
+      return Vector2(0, game.size.y - crowdSize - 2 * blockSize);
+    } else {
+      return Vector2(game.size.x - crowdSize, game.size.y - crowdSize - 2 * blockSize);
+    }
   }
-
-  void _setUpSpawn() {
-    position = game.camera.visibleWorldRect.bottomLeft.toVector2()..add(Vector2(-crowdSize, -crowdSize));
-  }
-
-  _setUpHitBoxes() {}
 
   @override
-  void update(double dt) async {
-    position.x += dt * 8;
+  beginContact(Object other, Contact contact) async {
+    await _getHit(other);
+  }
+
+  Future<void> _getHit(Object other) async {
+    if (other is TetrominoBlock && !_gotHit) {
+      _gotHit = true;
+      other.removeFromParent();
+      body.linearVelocity = Vector2(0, 0);
+      _crowdSprite.hitByBlock();
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      (game as SymTower).onCrowdKilled();
+
+      removeFromParent();
+    }
+  }
+
+  @override
+  void update(double dt) {
+    _checkOutOfView();
     super.update(dt);
+  }
+
+  void _checkOutOfView() {
+    if (position.x > (game.size.x + crowdSize) || position.x < -crowdSize) {
+      removeFromParent();
+    }
   }
 }

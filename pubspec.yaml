@@ -11,10 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flame: ^1.13.1
+  flame: ^1.18.0
   forge2d: ^0.13.0
-  flame_forge2d: ^0.18.0
+  flame_forge2d: ^0.18.1
   cupertino_icons: ^1.0.6
+  flame_tiled: ^1.20.2
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +29,7 @@ flutter:
     - assets/images/blocks/rock/
     - assets/images/blocks/stone/
     - assets/images/blocks/sand/
-    - assets/images/crane/
     - assets/images/
     - assets/images/crowd/
+    - assets/images/map/
+    - assets/tiles/

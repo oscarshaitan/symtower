@@ -1,17 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flame/extensions.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
-
-enum Material { marvel, rock, stone }
-
-enum TileStyle { tile_0000, tile_0001, tile_0002, tile_0003, tile_0006, tile_0011, tile_0013, tile_0016, tile_0021 }
-
-({Material material, TileStyle style}) randomBlockSprite() {
-  return (material: Material.values.random(), style: TileStyle.values.random());
-}
-
-const double size = 2;
+import 'package:symtower/tetromino/block/export.dart';
 
 class TetrominoBlock extends BodyComponent with TapCallbacks {
   final ({Material material, TileStyle style})? blockSprite;
@@ -26,8 +16,9 @@ class TetrominoBlock extends BodyComponent with TapCallbacks {
   @override
   Future<void> onLoad() async {
     bodyDef = BodyDef(
+      userData: this,
       angularDamping: 0.8,
-      position: initialPosition ?? Vector2.zero(),
+      position: initialPosition ?? Vector2((18 * 30) + 9, 18 * 16),
       type: isFoundation ? BodyType.static : BodyType.dynamic,
     );
 
@@ -39,7 +30,7 @@ class TetrominoBlock extends BodyComponent with TapCallbacks {
           isFoundation ? 'blocks/sand/tile_0025.png' : 'blocks/${blockSprite!.material.name}/${blockSprite!.style.name}.png',
         ),
         anchor: Anchor.center,
-        size: Vector2.all(size),
+        size: Vector2.all(blockSize),
       ),
     );
 
@@ -52,10 +43,10 @@ class TetrominoBlock extends BodyComponent with TapCallbacks {
         FixtureDef(
           PolygonShape()
             ..set([
-              Vector2(-(size / 2), (size / 2)),
-              Vector2((size / 2), -(size / 2)),
-              Vector2(-(size / 2), -(size / 2)),
-              Vector2((size / 2), (size / 2)),
+              Vector2(-(blockSize / 2), (blockSize / 2)),
+              Vector2((blockSize / 2), -(blockSize / 2)),
+              Vector2(-(blockSize / 2), -(blockSize / 2)),
+              Vector2((blockSize / 2), (blockSize / 2)),
             ]),
         )
       ];
@@ -64,15 +55,15 @@ class TetrominoBlock extends BodyComponent with TapCallbacks {
       FixtureDef(
         PolygonShape()
           ..set([
-            Vector2(-(size / 2), (size / 2)),
-            Vector2((size / 2), -(size / 2)),
-            Vector2(-(size / 2), -(size / 2)),
-            Vector2((size / 2), (size / 2)),
+            Vector2(-(blockSize / 2), (blockSize / 2)),
+            Vector2((blockSize / 2), -(blockSize / 2)),
+            Vector2(-(blockSize / 2), -(blockSize / 2)),
+            Vector2((blockSize / 2), (blockSize / 2)),
           ]),
         restitution: switch (blockSprite!.material) {
-          Material.marvel => 0.6,
-          Material.rock => 0.8,
-          Material.stone => 0.3,
+          Material.marvel => 0.3,
+          Material.rock => 0.2,
+          Material.stone => 0.1,
         },
         density: switch (blockSprite!.material) {
           Material.marvel => 500,
