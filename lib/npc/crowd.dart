@@ -5,7 +5,7 @@ import 'package:symtower/main.dart';
 import 'package:symtower/npc/crowd_sprite.dart';
 import 'package:symtower/tetromino/block/export.dart';
 
-class Crowd extends BodyComponent with ContactCallbacks {
+class Crowd extends BodyComponent<SymTower> with ContactCallbacks {
   Crowd() : super(renderBody: false);
   late final CrowdSprite _crowdSprite;
   bool _gotHit = false;
@@ -40,9 +40,9 @@ class Crowd extends BodyComponent with ContactCallbacks {
 
   Vector2 _getSpawn(bool leftSpawn) {
     if (leftSpawn) {
-      return Vector2(0, game.size.y - crowdSize - 2 * blockSize);
+      return Vector2(0, game.size.y - crowdSize - 2 * tileSize);
     } else {
-      return Vector2(game.size.x - crowdSize, game.size.y - crowdSize - 2 * blockSize);
+      return Vector2(game.size.x - crowdSize, game.size.y - crowdSize - 2 * tileSize);
     }
   }
 
@@ -52,15 +52,14 @@ class Crowd extends BodyComponent with ContactCallbacks {
   }
 
   Future<void> _getHit(Object other) async {
-    if (other is TetrominoBlock && !_gotHit) {
+    if (other is TetrominoBlock && !_gotHit && !other.onTheGround) {
       _gotHit = true;
-      other.removeFromParent();
+
       body.linearVelocity = Vector2(0, 0);
       _crowdSprite.hitByBlock();
+
       await Future.delayed(const Duration(milliseconds: 600));
-
-      (game as SymTower).onCrowdKilled();
-
+      game.onCrowdKilled();
       removeFromParent();
     }
   }

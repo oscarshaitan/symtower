@@ -21,4 +21,4 @@ enum TileStyle {
   );
 }
 
-const double blockSize = 18;
+const double tileSize = 18;
